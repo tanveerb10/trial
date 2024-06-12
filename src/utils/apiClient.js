@@ -1,34 +1,81 @@
 
 
+// import axios from 'axios';
+// import CryptoJS from 'crypto-js';
+
+// export const secret = "tom-and-jerry";
+
+//  export const generateNonce = () => CryptoJS.lib.WordArray.random(16).toString();
+
+// // Function to generate a timestamp
+//  export const generateTimestamp = () => Date.now().toString();
+
+// // Function to generate a signature
+//  export const generateSignature = (timestamp, secret) => {
+//   const payload = `${payloaddata}|${nonce}|${timestamp}`;
+//     return CryptoJS.HmacSHA256(payload, secret).toString(CryptoJS.enc.Hex);
+// };
+
+// // Create an Axios instance
+// export const apiClient = axios.create({
+//   baseURL: 'http://165.232.189.68',
+  
+//   credentials: true, // Ensure credentials are included
+// });
+
+// // Add a request interceptor
+// apiClient.interceptors.request.use(
+//   (config) => {
+//     const requestBody = config.data;
+//     const nonce = generateNonce();
+//     const timestamp = generateTimestamp();
+//     const signature = generateSignature(timestamp, secret, payloaddata, nonce, );
+
+//     // Add headers to the request
+//     config.headers['Content-Type'] = 'application/json';
+//     config.headers['Nonce'] = nonce;
+//     config.headers['Timestamp'] = timestamp;
+//     config.headers['Signature'] = signature;
+
+//     return config;
+//   },
+//   (error) => {
+//     return Promise.reject(error);
+//   }
+// );
+
+
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
 
-export const secret = "tom-and-jerry";
+// Secret key
+export const secret = 'tom-and-jerry';
 
- const generateNonce = () => CryptoJS.lib.WordArray.random(16).toString();
+// Function to generate nonce
+export const generateNonce = () => CryptoJS.lib.WordArray.random(16).toString();
 
 // Function to generate a timestamp
- const generateTimestamp = () => Date.now().toString();
+export const generateTimestamp = () => Date.now().toString();
 
 // Function to generate a signature
- const generateSignature = (timestamp, secret) => {
-    return CryptoJS.HmacSHA256(timestamp, secret).toString(CryptoJS.enc.Hex);
+export const generateSignature = (payloaddata, secret, nonce, timestamp) => {
+  const payload = `${payloaddata}|${nonce}|${timestamp}`;
+  return CryptoJS.HmacSHA256(payload, secret).toString(CryptoJS.enc.Hex);
 };
 
 // Create an Axios instance
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: 'http://165.232.189.68',
-  
-  // credentials: true, // Ensure credentials are included
+  // credentials: true, 
 });
 
 // Add a request interceptor
 apiClient.interceptors.request.use(
   (config) => {
-    const requestBody = config.data;
+    const payloaddata = JSON.stringify(config.data || {});
     const nonce = generateNonce();
     const timestamp = generateTimestamp();
-    const signature = generateSignature(timestamp, secret);
+    const signature = generateSignature(payloaddata, secret, nonce, timestamp);
 
     // Add headers to the request
     config.headers['Content-Type'] = 'application/json';
@@ -42,5 +89,3 @@ apiClient.interceptors.request.use(
     return Promise.reject(error);
   }
 );
-
-export default apiClient;

@@ -1,5 +1,3 @@
-
-
 // Next Imports
 import { NextResponse } from 'next/server'
 
@@ -10,7 +8,7 @@ import { match as matchLocale } from '@formatjs/intl-localematcher'
 
 import CryptoJS from 'crypto-js'
 
-import apiClient from '@/utils/apiClient'
+// import signature from '@/utils/signature'
 
 // Config Imports
 import { i18n } from '@configs/i18n'
@@ -18,46 +16,203 @@ import { i18n } from '@configs/i18n'
 // Util Imports
 import { getLocalizedUrl, isUrlMissingLocale } from '@/utils/i18n'
 import { ensurePrefix, withoutSuffix } from '@/utils/string'
+import { apiClient, generateNonce, generateTimestamp, generateSignature, secret } from '@/utils/apiClient'
 
 // import {generateNonce,generateSignature,generateTimestamp} from '@/utils/signature'
 
-// Function to generate nonce
-const generateNonce = () => {
-  return CryptoJS.lib.WordArray.random(16).toString()
-}
+// // Function to generate nonce
+// const generateNonce = () => {
+//   return CryptoJS.lib.WordArray.random(16).toString()
+// }
 
-// Function to generate timestamp
-const generateTimestamp = () => {
-  return Date.now().toString()
-}
+// // Function to generate timestamp
+// const generateTimestamp = () => {
+//   return Date.now().toString()
+// }
 
-// Function to generate HMAC signature
+// // Function to generate HMAC signature
 
-const generateSignature = (payloaddata, secret, nonce,timestamp,) => {
-  // const payload = `${payloaddata}|${nonce}|${timestamp}`;
+// const generateSignature = (payloaddata, secret, nonce,timestamp,) => {
+//   // const payload = `${payloaddata}|${nonce}|${timestamp}`;
 
-  return CryptoJS.HmacSHA256(timestamp, secret).toString(CryptoJS.enc.Hex);
-};
+//   return CryptoJS.HmacSHA256(timestamp, secret).toString(CryptoJS.enc.Hex);
+// };
+
+// // Constants
+// const HOME_PAGE_URL = '/dashboards/crm'
+// const VERIFY_TOKEN_API_URL = '/admin/admins/protected'
+
+// const getLocale = request => {
+//   // Try to get locale from URL
+//   const urlLocale = i18n.locales.find(locale => request.nextUrl.pathname.startsWith(`/${locale}`))
+
+//   if (urlLocale) return urlLocale
+
+//   // Negotiator expects plain object so we need to transform headers
+//   const negotiatorHeaders = {}
+
+//   request.headers.forEach((value, key) => (negotiatorHeaders[key] = value))
+
+//   // @ts-ignore locales are readonly
+//   const locales = i18n.locales
+
+//   // Use negotiator and intl-localematcher to get best locale
+//   const languages = new Negotiator({ headers: negotiatorHeaders }).languages(locales)
+//   const locale = matchLocale(languages, locales, i18n.defaultLocale)
+
+//   return locale
+// }
+
+// const localizedRedirect = (url, locale, request) => {
+//   let _url = url
+//   const isLocaleMissing = isUrlMissingLocale(_url)
+
+//   if (isLocaleMissing) {
+//     // e.g. incoming request is /products
+//     // The new URL is now /en/products
+//     _url = getLocalizedUrl(_url, locale ?? i18n.defaultLocale)
+//   }
+
+//   let _basePath = process.env.BASEPATH ?? ''
+
+//   _basePath = _basePath.replace('demo-1', request.headers.get('X-server-header') ?? 'demo-1')
+//   _url = ensurePrefix(_url, `${_basePath ?? ''}`)
+//   const redirectUrl = new URL(_url, request.url).toString()
+
+//   return NextResponse.redirect(redirectUrl)
+// }
+
+// export async function middleware(request) {
+//   // Get locale from request headers
+//   const locale = getLocale(request)
+//   const pathname = request.nextUrl.pathname
+
+//   // Extract token from cookies
+//   const { cookies } = request
+
+//   const token = cookies.get('accessToken')?.value || ''
+//   const secret = 'tom-and-jerry'
+
+//   console.log('token ', token)
+
+//   // Check if the user is logged in
+//   let isUserLoggedIn = !!token
+
+//   // working
+
+//   if (token) {
+//     //   console.log('Verifying token...');
+
+//     const payloaddata = JSON.stringify({});
+//     const nonce = generateNonce()
+
+//     console.log('=========================================================================================================================')
+//     console.log(nonce);
+//     const timestamp = generateTimestamp()
+
+//     console.log(timestamp);
+//     const signature = generateSignature(payloaddata, secret, nonce,timestamp)
+
+//     console.log(signature);
+//     console.log('=========================================================================================================================')
+
+//     try {
+//       // const response = await fetch(`${process.env.API_URL}/admin/admins/protected`, {
+//       //   method: 'POST',
+//       //   headers: {
+//       //     'Content-Type': 'application/json',
+//       //     "Nonce": nonce,
+//       //     "Timestamp": timestamp,
+//       //     "Signature": signature
+//       //   },
+
+//       //   // body: JSON.stringify({ accessToken: token })
+//       // })
+
+//       const response = await apiClient.post('/admin/admins/protected', {accessToken: token  })
+//       console.log('=========================================================================================================================')
+
+//           // console.log(response);
+
+//           if (!response.ok) {
+//             throw new Error(`HTTP error! Status: ${response.status} `)
+//             }
+
+//             console.log('Verification Response: ', verificationResponse.ok);
+//             const verificationResponse = await response.json()
+
+//             console.log('=========================================================================================================================')
+
+//       if (verificationResponse.status) {
+//         isUserLoggedIn = true
+//         console.log('Login successful')
+//       } else {
+//         isUserLoggedIn = false
+//         console.log('Login unsuccessful (verification failed)')
+//       }
+//     } catch (error) {
+//       isUserLoggedIn = false
+//       console.error('Verification Error: ', error)
+//     }
+//   }
+
+// if (token) {
+//   const nonce = generateNonce();
+//   const timestamp = generateTimestamp();
+//   const payloaddata = JSON.stringify({});
+//   const signature = generateSignature(payloaddata, secret, nonce, timestamp);
+
+//   try {
+//     const response = await fetch(`${process.env.API_URL}/admin/admins/protected`, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         'Nonce': nonce,
+//         'Timestamp': timestamp,
+//         'Signature': signature
+//       },
+//       body: JSON.stringify({ accessToken: token })
+//     });
+
+//     console.log(response);
+
+//     if (!response.ok) {
+//       throw new Error(`HTTP error! Status: ${response.status}`);
+//     }
+
+//     const verificationResponse = await response.json();
+
+//     isUserLoggedIn = verificationResponse.success;
+
+//     if (!isUserLoggedIn) {
+//       console.log('Login unsuccessful (verification failed)');
+
+//       return NextResponse.redirect('/login');
+//     }
+
+//     console.log('Login successful');
+//   } catch (error) {
+
+//     console.error("Verification Error:", error);
+
+//     return NextResponse.redirect('/login');
+//   }
+// }
 
 // Constants
 const HOME_PAGE_URL = '/dashboards/crm'
 const VERIFY_TOKEN_API_URL = '/admin/admins/protected'
 
 const getLocale = request => {
-  // Try to get locale from URL
   const urlLocale = i18n.locales.find(locale => request.nextUrl.pathname.startsWith(`/${locale}`))
 
   if (urlLocale) return urlLocale
 
-  // Negotiator expects plain object so we need to transform headers
   const negotiatorHeaders = {}
 
   request.headers.forEach((value, key) => (negotiatorHeaders[key] = value))
 
-  // @ts-ignore locales are readonly
   const locales = i18n.locales
-
-  // Use negotiator and intl-localematcher to get best locale
   const languages = new Negotiator({ headers: negotiatorHeaders }).languages(locales)
   const locale = matchLocale(languages, locales, i18n.defaultLocale)
 
@@ -69,14 +224,13 @@ const localizedRedirect = (url, locale, request) => {
   const isLocaleMissing = isUrlMissingLocale(_url)
 
   if (isLocaleMissing) {
-    // e.g. incoming request is /products
-    // The new URL is now /en/products
     _url = getLocalizedUrl(_url, locale ?? i18n.defaultLocale)
   }
 
   let _basePath = process.env.BASEPATH ?? ''
 
   _basePath = _basePath.replace('demo-1', request.headers.get('X-server-header') ?? 'demo-1')
+
   _url = ensurePrefix(_url, `${_basePath ?? ''}`)
   const redirectUrl = new URL(_url, request.url).toString()
 
@@ -84,124 +238,93 @@ const localizedRedirect = (url, locale, request) => {
 }
 
 export async function middleware(request) {
-  // Get locale from request headers
   const locale = getLocale(request)
   const pathname = request.nextUrl.pathname
-
-  // Extract token from cookies
   const { cookies } = request
-
- 
-
   const token = cookies.get('accessToken')?.value || ''
-  const secret = 'tom-and-jerry'
-
-  console.log('token ', token)
-
-  // Check if the user is logged in
+  // const secret = 'tom-and-jerry'
   let isUserLoggedIn = !!token
 
-  
-  // working
-
-
   if (token) {
-    //   console.log('Verifying token...');
+    const secret = 'tom-and-jerry'
+    const payloaddata = JSON.stringify({})
+    const nonce = CryptoJS.lib.WordArray.random(16).toString()
+    const timestamp = Date.now().toString()
+    // const token = accessToken
+    console.log('======================================', token)
+    const generateSignature = (payloaddata, secret, nonce, timestamp) => {
+      const payload = `${payloaddata}|${nonce}|${timestamp}`
+      return CryptoJS.HmacSHA256(payload, secret).toString(CryptoJS.enc.Hex)
+    }
 
-    const payloaddata = JSON.stringify({});
-    const nonce = generateNonce()
-
-    console.log('=========================================================================================================================')
-    console.log(nonce);
-    const timestamp = generateTimestamp()
-
-    console.log(timestamp);
-    const signature = generateSignature(payloaddata, secret, nonce,timestamp)
-
-    console.log(signature);
-    console.log('=========================================================================================================================')
+    const signature = generateSignature(payloaddata, secret, nonce, timestamp)
+    console.log(signature)
+    // const payloaddata = JSON.stringify({});
+    // const nonce = generateNonce();
+    // const timestamp = generateTimestamp();
+    // const signature = generateSignature(payloaddata, secret, nonce, timestamp);
 
     try {
-      const response = await fetch(`${process.env.API_URL}/admin/admins/protected`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          "Nonce": nonce,
-          "Timestamp": timestamp,
-          "Signature": signature
-        },
-        body: JSON.stringify({ accessToken: token })
-      })
+      const response = await apiClient.post(
+        VERIFY_TOKEN_API_URL,
+        {},
+        {
+          headers: {
+            'livein-key': 'livein-key',
+            "Nonce": nonce,
+            "Timestamp": timestamp,
+            "Signature": signature,
+            // Authorization: `Bearer ${token}`
+            'Cookie': `accessToken=${token}`,
+          }
+          // headers: {
+          //   'Nonce': nonce,
+          //   'Timestamp': timestamp,
+          //   'Signature': signature,
+          //   }
+        }
+      )
 
-      console.log('=========================================================================================================================')
-          console.log(response);
-          console.log('=========================================================================================================================')
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status} `)
+      console.log(token)
+      console.log(response)
+      if (response.status !== 200) {
+        throw new Error(`HTTP error! Status: ${response.status}`)
       }
 
-      const verificationResponse = await response.json()
+      const verificationResponse = response.data
+      isUserLoggedIn = verificationResponse.success
 
-      //     console.log('Verification Response: ', verificationResponse);
+      // try {
+      console.log('=================================================================')
+      console.log(token)
+      console.log('token')
+      // const response = await fetch(`http://165.232.189.68/admin/admins/protected`, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     "Nonce": nonce,
+      //     "Timestamp": timestamp,
+      //     "Signature": signature
+      //   },
+      //   body: JSON.stringify({ token })
+      // })
 
-      if (verificationResponse.success) {
-        isUserLoggedIn = true
-        console.log('Login successful')
-      } else {
-        isUserLoggedIn = false
+      // console.log(response)
+
+      if (!isUserLoggedIn) {
         console.log('Login unsuccessful (verification failed)')
+        isUserLoggedIn = false
+        // return NextResponse.redirect(new URL('/login', request.url));
       }
+
+      console.log('Login successful')
     } catch (error) {
+      console.error('Verification Error:', error)
       isUserLoggedIn = false
-      console.error('Verification Error: ', error)
     }
   }
 
-  // if (token) {
-  //   const nonce = generateNonce();
-  //   const timestamp = generateTimestamp();
-  //   const payloaddata = JSON.stringify({});
-  //   const signature = generateSignature(payloaddata, secret, nonce, timestamp);
-
-  //   try {
-  //     const response = await fetch(`${process.env.API_URL}/admin/admins/protected`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Nonce': nonce,
-  //         'Timestamp': timestamp,
-  //         'Signature': signature
-  //       },
-  //       body: JSON.stringify({ accessToken: token })
-  //     });
-
-  //     console.log(response);
-
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP error! Status: ${response.status}`);
-  //     }
-
-  //     const verificationResponse = await response.json();
-
-  //     isUserLoggedIn = verificationResponse.success;
-
-  //     if (!isUserLoggedIn) {
-  //       console.log('Login unsuccessful (verification failed)');
-
-  //       return NextResponse.redirect('/login');
-  //     }
-
-  //     console.log('Login successful');
-  //   } catch (error) {
-
-  //     console.error("Verification Error:", error);
-
-  //     return NextResponse.redirect('/login');
-  //   }
-  // }
-
-  // console.log("Is User Logged In: ", isUserLoggedIn)
+  console.log('Is User Logged In: ', isUserLoggedIn)
 
   // Guest routes (Routes that can be accessed by guest users who are not logged in)
   const guestRoutes = ['login', 'register', 'forgot-password']
