@@ -258,7 +258,7 @@ export async function middleware(request) {
     }
 
     const signature = generateSignature(payloaddata, secret, nonce, timestamp)
-    console.log(signature)
+    // console.log(signature)
     // const payloaddata = JSON.stringify({});
     // const nonce = generateNonce();
     // const timestamp = generateTimestamp();
@@ -285,8 +285,8 @@ export async function middleware(request) {
         }
       )
 
-      console.log(token)
-      console.log(response)
+      // console.log(token)
+      // console.log(response)
       if (response.status !== 200) {
         throw new Error(`HTTP error! Status: ${response.status}`)
       }
@@ -296,8 +296,8 @@ export async function middleware(request) {
 
       // try {
       console.log('=================================================================')
-      console.log(token)
-      console.log('token')
+      // console.log(token)
+      // console.log('token')
       // const response = await fetch(`http://165.232.189.68/admin/admins/protected`, {
       //   method: 'POST',
       //   headers: {

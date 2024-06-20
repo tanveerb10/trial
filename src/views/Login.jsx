@@ -401,11 +401,12 @@ import { useSettings } from '@core/hooks/useSettings'
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
 
-import apiClient from '@/utils/apiClient'
-
-import {generateNonce,generateSignature,generateTimestamp} from '@/utils/signature' 
+import CryptoJS from 'crypto-js';
 
 
+import {apiClient} from '@/utils/apiClient'
+
+import {generateNonce,generateSignature,generateTimestamp, secret} from '@/utils/apiClient'
 
 // Styled Custom Components
 const LoginIllustration = styled('img')(({ theme }) => ({
@@ -484,105 +485,170 @@ const Login = ({ mode }) => {
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
   // onSubmit function
-  const onSubmit = async ({ email, password }) => {
-      // signature
-      const requestBody = {email,password}
-  const secret = "tom-and-jerry"
-  const nonce = generateNonce()
-  const timestamp = generateTimestamp()
-  const signature = generateSignature( timestamp,secret)
+//   const onSubmit = async ({ email, password }) => {
+//       // signature
+//       const payloaddata = JSON.stringify({ email, password });
+//   const nonce = generateNonce();
+//   const timestamp = generateTimestamp();
+//   const signature = generateSignature(payloaddata, secret, nonce, timestamp);
 
-  console.log(nonce, "nonce", timestamp, "timestamp", signature, "signature", requestBody, "request body");
+//   console.log(nonce, 'nonce', timestamp, 'timestamp', signature, 'signature', payloaddata, 'request body');
 
-    try {
-      const response = await apiClient.post('/admin/admins/adminlogin', { email, password })
-
-      // Usage example
-
-  //     const response = await fetch('http://165.232.189.68/admin/admins/adminlogin',
-
-  //     { 
-  //       method : "POST",
-  //       headers:{
-
-  //       'Content-Type' : 'application/json',
-  //       'Nonce' : nonce,
-  //       'Timestamp' : timestamp,
-  //       "Signature" : signature
-   
-  //   },
-  // body : JSON.stringify(requestBody)
-  // })
+//   try {
+//     const response = await apiClient.post('/admin/admins/adminlogin', { email, password }, {
+//       headers: {
+//         'Nonce': nonce,
+//         'Timestamp': timestamp,
+//         'Signature': signature
+//       }
+//     });
      
-  const {accessToken, refreshToken} = await response.data
+//   const {accessToken, refreshToken} = await response.data
   
-  setCookie('accessToken', accessToken)
-setCookie('refreshToken', refreshToken)
-
-// console.log('saved');
-
-// if (response) {
-//   const {accessToken, refreshToken} = response
-
-
 //   setCookie('accessToken', accessToken)
-//   setCookie('refreshToken', refreshToken)
+// setCookie('refreshToken', refreshToken)
+
+//       if (response && response.status == 200 && response.error == null ) {
+// console.log(document.cookie); 
+
+//         const redirectURL = searchParams.get('redirectTo') ?? '/'
+
+//         router.push(getLocalizedUrl(redirectURL, locale));
+//       }
+//       else{
+//         console.log("you are not authenticated");
+//       }
+//     } catch (err) {
+//       setSendAlert(err.message)
+//     }
+//   }
+      
+// const onProtected = async()=>{
+//   const axios = require('axios');
+//   const secret = 'tom-and-jerry';
+// const payloaddata = JSON.stringify({});
+//   const nonce = CryptoJS.lib.WordArray.random(16).toString();
+//   const timestamp = Date.now().toString();
+//   const generateSignature = (payloaddata, secret, nonce, timestamp) => {
+//     const payload = `${payloaddata}|${nonce}|${timestamp}`;
+//       // const payload = `${payloaddata}`
+//       // console.log(payload + 'payload')
+//     return CryptoJS.HmacSHA256(payload, secret).toString(CryptoJS.enc.Hex);
+//   };
+//   // console.log(generateSignature + 'generateSignature')
   
-//   console.log('saved');
-// }else{
-//   "you are not authenticated"
-// }
+//   // Generate the signature
+//   const signature = generateSignature(payloaddata, secret, nonce, timestamp);
+//   console.log(signature);
+  
+// let config = {
+//   method: 'post',
+//   maxBodyLength: Infinity,
+//   url: 'http://165.232.189.68/admin/admins/protected',
+//   headers: { 
+//     'livein-key': 'livein-key', 
+//     'Nonce': nonce, 
+//     'Timestamp': timestamp, 
+//     'Signature': signature, 
+//     'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NjYxNTA1NzIzYjQ3NDAzMWFmNTMwYmEiLCJlbWFpbCI6ImFtYXJAbGl2ZWluLmluIiwicGhvbmUiOiI4MTA0OTYwMjYxIiwiaWF0IjoxNzE4MTg1MTE3LCJyb2xlIjoic3VwZXJhZG1pbiIsImFiaWxpdHkiOlsiZGFzaGJvYXJkIiwic3VtbWFyeSIsImFuYWx5dGljcyIsInJlcG9ydHMiLCJhZG1pbnMiLCJhZG1pbnVzZXJzIiwicm9sZXMiLCJjdXN0b21lcnMiLCJhbGxjdXN0b21lcnMiLCJjdXN0b21lcnNlZ21lbnQiLCJwcm9kdWN0cyIsImFsbHByb2R1Y3RzIiwiY2F0ZWdvcmllcyIsImJ1bGtpbXBvcnQiLCJpbnZlbnRvcnkiLCJtZXRhcyIsInRhZ3MiLCJvZmZlcnMiLCJhbGxjb3Vwb25zIiwiY3VzdG9tZXJjb3Vwb25zIiwib3JkZXJzIiwiYWxsb3JkZXJzIiwiYnVsa3Byb2Nlc3NpbmciLCJ0cmFuc2FjdGlvbnMiLCJhcmNoaXZlZG9yZGVycyIsImNtcyIsInN0b3Jlc2V0dXAiLCJzdHlsZSIsImJhbm5lcnMiLCJzdG9yaWVzIiwic2VvIiwicGFnZXMiLCJtZWRpYSIsImdvb2dsZSIsImZhY2Vib29rIiwic29jaWFscHJvZmlsZXMiLCJwYXltZW50cyIsImNhc2hvbmRlbGl2ZXJ5IiwicmF6b3JwYXkiLCJwaG9uZXBlIiwic2hpcHBpbmciLCJzaGlwcGluZ3pvbmVzIiwic2hpcHBpbmdjaGFyZ2VzIiwicGluY29kZXMiLCJ0YXhlcyIsInRheHJhdGUiLCJ0YXhncm91cCIsImVtYWlsIiwic210cCIsInRlbXBsYXRlcyIsInNlbmRlbWFpbHMiLCJub3RpZmljYXRpb25zIiwiZmlyZWJhc2VzZXR1cCIsInNtc3RlbXBsYXRlcyIsInNlbmRub3RpZmljYXRpb24iLCJzbXMiLCJzbXNzZXR1cCIsInNtc3RlbXBsYXRlcyIsInNoaXBwZXJzIiwiZGVsaGl2ZXJ5IiwiYmx1ZWRhcnQiLCJzaGlwcm9ja2V0Iiwic2hpcGRlbGlnaHQiLCJicmFuZHMiXSwiZXhwIjoxNzI1OTYxMTE3fQ.o7fwgCMLj4E5zSitvSFPTBXCG7RbjtJgXhphhfhQmgk', 
+//     'Cookie': 'accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NjYxNTA1NzIzYjQ3NDAzMWFmNTMwYmEiLCJlbWFpbCI6ImFtYXJAbGl2ZWluLmluIiwicGhvbmUiOiI4MTA0OTYwMjYxIiwiaWF0IjoxNzE4MTg1MTE3LCJyb2xlIjoic3VwZXJhZG1pbiIsImFiaWxpdHkiOlsiZGFzaGJvYXJkIiwic3VtbWFyeSIsImFuYWx5dGljcyIsInJlcG9ydHMiLCJhZG1pbnMiLCJhZG1pbnVzZXJzIiwicm9sZXMiLCJjdXN0b21lcnMiLCJhbGxjdXN0b21lcnMiLCJjdXN0b21lcnNlZ21lbnQiLCJwcm9kdWN0cyIsImFsbHByb2R1Y3RzIiwiY2F0ZWdvcmllcyIsImJ1bGtpbXBvcnQiLCJpbnZlbnRvcnkiLCJtZXRhcyIsInRhZ3MiLCJvZmZlcnMiLCJhbGxjb3Vwb25zIiwiY3VzdG9tZXJjb3Vwb25zIiwib3JkZXJzIiwiYWxsb3JkZXJzIiwiYnVsa3Byb2Nlc3NpbmciLCJ0cmFuc2FjdGlvbnMiLCJhcmNoaXZlZG9yZGVycyIsImNtcyIsInN0b3Jlc2V0dXAiLCJzdHlsZSIsImJhbm5lcnMiLCJzdG9yaWVzIiwic2VvIiwicGFnZXMiLCJtZWRpYSIsImdvb2dsZSIsImZhY2Vib29rIiwic29jaWFscHJvZmlsZXMiLCJwYXltZW50cyIsImNhc2hvbmRlbGl2ZXJ5IiwicmF6b3JwYXkiLCJwaG9uZXBlIiwic2hpcHBpbmciLCJzaGlwcGluZ3pvbmVzIiwic2hpcHBpbmdjaGFyZ2VzIiwicGluY29kZXMiLCJ0YXhlcyIsInRheHJhdGUiLCJ0YXhncm91cCIsImVtYWlsIiwic210cCIsInRlbXBsYXRlcyIsInNlbmRlbWFpbHMiLCJub3RpZmljYXRpb25zIiwiZmlyZWJhc2VzZXR1cCIsInNtc3RlbXBsYXRlcyIsInNlbmRub3RpZmljYXRpb24iLCJzbXMiLCJzbXNzZXR1cCIsInNtc3RlbXBsYXRlcyIsInNoaXBwZXJzIiwiZGVsaGl2ZXJ5IiwiYmx1ZWRhcnQiLCJzaGlwcm9ja2V0Iiwic2hpcGRlbGlnaHQiLCJicmFuZHMiXSwiZXhwIjoxNzI1OTYxMTE3fQ.o7fwgCMLj4E5zSitvSFPTBXCG7RbjtJgXhphhfhQmgk; refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NjYxNTA1NzIzYjQ3NDAzMWFmNTMwYmEiLCJpYXQiOjE3MTgxODUxMTcsImV4cCI6MTczMzczNzExN30.n96xmY9OUNnr4zJEt2A4BEc43QlRx_6b7zG3_8g5XPo'
+//   }
+// };
 
-  // const body = await response.json()
-      // const body = await response.data
-// const {accessToken, refreshToken} = await body.data
-    // const body = await response.json()
-    // const body = await response
-    // console.log(body);
-    // console.log(token);
-    // console.log(body);
-    // console.log(data);
-   // console.log(document.cookie)
+// axios.request(config)
+// .then((response) => {
+//   console.log(JSON.stringify(response.data));
+// })
+// .catch((error) => {
+//   console.log(error);
+// });
 
-      // if (data.status  !== 200) {
-      //   setSendAlert(data.msg)
+// } 
 
-      // } else {
-      //   setSendAlert('')
+const onSubmit = async ({ email, password }) => {
+  // signature
+  const payloaddata = JSON.stringify({ email, password });
+  const nonce = generateNonce();
+  const timestamp = generateTimestamp();
+  const signature = generateSignature(payloaddata, secret, nonce, timestamp);
 
-        // if (response && response.ok && response.error == null) {
-        //   const redirectURL = searchParams.get('redirectTo') ?? '/'
+  console.log(nonce, 'nonce', timestamp, 'timestamp', signature, 'signature', payloaddata, 'request body');
 
-        //   router.push(getLocalizedUrl(redirectURL, locale))
-        // }
-      //   router.push("apps/check");
-
-      //   if (response) {
-      //     router.push("/apps/check");
-      //   } else {
-      //     if (response?.error) {
-      //       const error = JSON.parse(response.error)
-            
-      //       setErrorState(error)
-      //     }
-      //   }
-      // }
-
-      if (response && response.status == 200 && response.error == null ) {
-console.log(document.cookie); 
-
-        const redirectURL = searchParams.get('redirectTo') ?? '/'
-
-        router.push(getLocalizedUrl(redirectURL, locale));
+  try {
+    const response = await apiClient.post('/admin/admins/adminlogin', { email, password }, {
+      headers: {
+        'Nonce': nonce,
+        'Timestamp': timestamp,
+        'Signature': signature
       }
-      else{
-        console.log("you are not authenticated");
-      }
-    } catch (err) {
-      setSendAlert(err.message)
+    });
+
+    const { accessToken, refreshToken } = await response.data;
+    setCookie('accessToken', accessToken);
+    setCookie('refreshToken', refreshToken);
+
+    if (response && response.status === 200 && response.error == null) {
+      console.log(document.cookie);
+
+      const redirectURL = searchParams.get('redirectTo') ?? '/';
+      router.push(getLocalizedUrl(redirectURL, locale));
+
+      // Call the protected route
+      // await onProtected(accessToken, refreshToken);
+    } else {
+      console.log("You are not authenticated");
     }
+  } catch (err) {
+    setSendAlert(err.message);
   }
-        
+};
+
+
+// const onProtected = async (accessToken, refreshToken) => {
+//   const axios = require('axios');
+//   const secret = 'tom-and-jerry';
+//   const payloaddata = JSON.stringify({});
+//   const nonce = CryptoJS.lib.WordArray.random(16).toString();
+//   const timestamp = Date.now().toString();
+//   const token = accessToken
+// console.log("======================================", token);
+//   const generateSignature = (payloaddata, secret, nonce, timestamp) => {
+//     const payload = `${payloaddata}|${nonce}|${timestamp}`;
+//     return CryptoJS.HmacSHA256(payload, secret).toString(CryptoJS.enc.Hex);
+//   };
+
+//   const signature = generateSignature(payloaddata, secret, nonce, timestamp);
+//   console.log(signature);
+
+//   let config = {
+//     method: 'post',
+//     maxBodyLength: Infinity,
+//     url: 'http://165.232.189.68/admin/admins/protected',
+//     headers: {
+//       'livein-key': 'livein-key',
+//       'Nonce': nonce,
+//       'Timestamp': timestamp,
+//       'Signature': signature,
+//       // 'Authorization': `Bearer ${accessToken}`,
+//       // 'Cookie': `accessToken=${accessToken}`,
+//       'Cookie': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NjYxNjVhZTBhMzVhZjI2NGUwNjk0ZGQiLCJlbWFpbCI6ImFkbWluQGxpdmVpbi5pbiIsInBob25lIjoiODEwNDk2MDI2MCIsImlhdCI6MTcxODE5ODE5NSwicm9sZSI6InN1cGVyYWRtaW4iLCJhYmlsaXR5IjpbImRhc2hib2FyZCIsInN1bW1hcnkiLCJhbmFseXRpY3MiLCJyZXBvcnRzIiwiYWRtaW5zIiwiYWRtaW51c2VycyIsInJvbGVzIiwiY3VzdG9tZXJzIiwiYWxsY3VzdG9tZXJzIiwiY3VzdG9tZXJzZWdtZW50IiwicHJvZHVjdHMiLCJhbGxwcm9kdWN0cyIsImNhdGVnb3JpZXMiLCJidWxraW1wb3J0IiwiaW52ZW50b3J5IiwibWV0YXMiLCJ0YWdzIiwib2ZmZXJzIiwiYWxsY291cG9ucyIsImN1c3RvbWVyY291cG9ucyIsIm9yZGVycyIsImFsbG9yZGVycyIsImJ1bGtwcm9jZXNzaW5nIiwidHJhbnNhY3Rpb25zIiwiYXJjaGl2ZWRvcmRlcnMiLCJjbXMiLCJzdG9yZXNldHVwIiwic3R5bGUiLCJiYW5uZXJzIiwic3RvcmllcyIsInNlbyIsInBhZ2VzIiwibWVkaWEiLCJnb29nbGUiLCJmYWNlYm9vayIsInNvY2lhbHByb2ZpbGVzIiwicGF5bWVudHMiLCJjYXNob25kZWxpdmVyeSIsInJhem9ycGF5IiwicGhvbmVwZSIsInNoaXBwaW5nIiwic2hpcHBpbmd6b25lcyIsInNoaXBwaW5nY2hhcmdlcyIsInBpbmNvZGVzIiwidGF4ZXMiLCJ0YXhyYXRlIiwidGF4Z3JvdXAiLCJlbWFpbCIsInNtdHAiLCJ0ZW1wbGF0ZXMiLCJzZW5kZW1haWxzIiwibm90aWZpY2F0aW9ucyIsImZpcmViYXNlc2V0dXAiLCJzbXN0ZW1wbGF0ZXMiLCJzZW5kbm90aWZpY2F0aW9uIiwic21zIiwic21zc2V0dXAiLCJzbXN0ZW1wbGF0ZXMiLCJzaGlwcGVycyIsImRlbGhpdmVyeSIsImJsdWVkYXJ0Iiwic2hpcHJvY2tldCIsInNoaXBkZWxpZ2h0IiwiYnJhbmRzIl0sImV4cCI6MTcyNTk3NDE5NX0.RjrqyFna9kLwkmg7Zx9aOop5UT8t39tkx0qwg10vhjM'
+      
+//     }
+
+//   };
+
+//   console.log(config);
+
+//   axios.request(config)
+//     .then((response) => {
+//       console.log(JSON.stringify(response.data));
+//     })
+//     .catch((error) => {
+//       console.log(error);
+//     });
+// };
+
+
 // const onSubmit = async ({ email, password }) => {
 //   // Create the request body
 //   const requestBody = { email, password };

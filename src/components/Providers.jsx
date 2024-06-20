@@ -40,16 +40,16 @@ const Providers = props => {
   return (
    <QueryProvider>
       <VerticalNavProvider>
-        
-          {/* <AbilityProvider> */}
+        <PermissionsProvider>
+          <AbilityProvider>
             <SettingsProvider settingsCookie={settingsCookie} mode={mode} demoName={demoName}>
               <ThemeProvider direction={direction} systemMode={systemMode}>
                 {children}
                 <AppReactToastify position={themeConfig.toastPosition} hideProgressBar />
               </ThemeProvider>
             </SettingsProvider>
-            {/* </AbilityProvider> */}
-        
+            </AbilityProvider>
+            </PermissionsProvider>
       </VerticalNavProvider>
       </QueryProvider>
   )

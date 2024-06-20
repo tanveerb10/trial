@@ -1,48 +1,73 @@
-"use client"
+'use client'
 
-import { createContext,useContext, useState, useEffect } from "react"
-
+import { createContext, useContext, useState, useEffect } from 'react'
+import { jwtDecode } from 'jwt-decode'
+import Cookies from 'js-cookie'
 // import { useSession } from "next-auth/react"
-
-const PermissionsContext  = createContext({role: [] }) // for string change
-
+const PermissionsContext = createContext({ role: [] }) // for string change
 // console.log(PermissionsContext)
-
-export const PermissionsProvider  = ({children}) => {
-    const {data:session, status} = useSession()
-    const [role, setRole] = useState([]) // for string change 
-
-if(status==="loading"){
-<p>Loading</p>
-}
-
-
-    // useEffect(()=>{
-    //     if (session?.user) {
-            
-    //     setRole(session?.user?.role)
-    //     }else {
-    //         setRole([]) // for string change
-    //     }
-    // },[session])
-
-    return(
-        
-        // <PermissionsContext.Provider value = {{role}}>
-
-        <PermissionsContext.Provider >
-            {children}
-        </PermissionsContext.Provider>
-    )
-}
-
-export const usePermissions = () => {
-    const context = useContext(PermissionsContext)
-
-
-    if (!context) {
-        throw new Error('usePermissions must be used within PermissionsProvider');
+export const PermissionsProvider = ({ children }) => {
+  const [role, setRole] = useState([]) // for string change
+  useEffect(() => {
+    const token = Cookies.get('accessToken')
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token)
+        setRole(decodedToken.role || [])
+      } catch (error) {
+        console.error('Failed to decode token:', error)
+        setRole([]) // fallback in case of error
       }
-    
-      return context;
+    }
+  }, [])
+  return <PermissionsContext.Provider value={{ role }}>{children}</PermissionsContext.Provider>
 }
+export const usePermissions = () => {
+  const context = useContext(PermissionsContext)
+  if (!context) {
+    throw new Error('usePermissions must be used within PermissionsProvider')
+  }
+  return context
+}
+
+
+// 'use client';
+
+// import { createContext, useContext, useState, useEffect } from 'react';
+// import { jwtDecode } from 'jwt-decode';
+// import Cookies from 'js-cookie';
+
+// const PermissionsContext = createContext({ role: '' });
+
+// export const PermissionsProvider = ({ children }) => {
+//   const [role, setRole] = useState(''); // for string change
+
+//   useEffect(() => {
+//     const token = Cookies.get('accessToken');
+//     if (token) {
+//       try {
+//         const decodedToken = jwtDecode(token);
+//         console.log(decodedToken);
+//         console.log(decodedToken.role);
+//         setRole(decodedToken.role || '');
+//         console.log(setRole);
+//       } catch (error) {
+//         console.error('Failed to decode token:', error);
+//         setRole('');
+//       }
+//     }
+//   }, []);
+
+//   return <PermissionsContext.Provider value={{ role }}>{children}</PermissionsContext.Provider>;
+// };
+
+// export const usePermissions = () => {
+//   const context = useContext(PermissionsContext);
+//   console.log(context);
+
+//   if (!context) {
+//     throw new Error('usePermissions must be used within PermissionsProvider');
+//   }
+
+//   return context;
+// };

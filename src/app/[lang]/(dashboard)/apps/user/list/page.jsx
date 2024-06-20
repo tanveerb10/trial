@@ -15,7 +15,7 @@ const getData = async () => {
 const UserListApp = async () => {
   // Vars
   const data = await getData()
-
+  
   return <UserList userData={data} />
 }
 
